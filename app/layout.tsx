@@ -28,13 +28,13 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Instagram Reels Downloader" }],
   creator: "Instagram Reels Downloader",
-  metadataBase: new URL("https://yourdomain.com"),
+  metadataBase: new URL("https://instareelhub.onrender.com"),
 
   openGraph: {
     title: "Instagram Reels Downloader",
     description:
       "Download Instagram Reels videos and audio instantly in MP4 or MP3 format.",
-    url: "https://yourdomain.com",
+    url: "https://instareelhub.onrender.com",
     siteName: "Instagram Reels Downloader",
     images: [
       {

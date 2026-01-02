@@ -26,7 +26,7 @@ export default function InstagramDownloader() {
 
     setLoading(true);
 
-    const downloadUrl = `http://localhost:5000/api/download?url=${encodeURIComponent(
+    const downloadUrl = `/api/download?url=${encodeURIComponent(
       url
     )}&type=${type}`;
 

@@ -1,7 +1,7 @@
 export default function sitemap() {
   return [
     {
-      url: "https://yourdomain.com",
+      url: "https://instareelhub.onrender.com",
       lastModified: new Date().toISOString(),
     },
   ];
