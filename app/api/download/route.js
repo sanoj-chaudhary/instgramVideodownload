@@ -1,70 +1,60 @@
+// app/api/download/route.js
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import path from "path";
-import fs from "fs";
+import { spawn } from "child_process";
 
-export const runtime = "nodejs"; // ✅ REQUIRED
-export const dynamic = "force-dynamic"; // disable caching
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
-  const type = searchParams.get("type");
+  const type = searchParams.get("type"); // "audio" or "video"
 
   if (!url) {
-    return NextResponse.json(
-      { error: "Instagram URL is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Instagram URL is required" }, { status: 400 });
   }
 
-  const filename = `${Date.now()}.${type === "audio" ? "mp3" : "mp4"}`;
-  const downloadsDir = path.join(process.cwd(), "downloads");
+  return new Promise((resolve, reject) => {
+    const filename = `${Date.now()}.${type === "audio" ? "mp3" : "mp4"}`;
+    
+    // Build yt-dlp command
+    const args = [url, '--no-check-certificate', '--quiet', '-o', '-'];
+    if (type === "audio") {
+      args.unshift('-x', '--audio-format', 'mp3');
+    } else {
+      args.unshift('-f', 'mp4');
+    }
 
-  // Ensure downloads folder exists
-  if (!fs.existsSync(downloadsDir)) {
-    fs.mkdirSync(downloadsDir);
-  }
+    // Spawn yt-dlp process
+    const ytProcess = spawn('yt-dlp', args);
 
-  const outputPath = path.join(downloadsDir, filename);
+    const chunks = [];
+    ytProcess.stdout.on('data', (chunk) => chunks.push(chunk));
+    ytProcess.stderr.on('data', (chunk) => console.error(chunk.toString()));
 
-  const command =
-    type === "audio"
-      ? `yt-dlp -x --audio-format mp3 -o "${outputPath}" "${url}"`
-      : `yt-dlp -f mp4 -o "${outputPath}" "${url}"`;
-
-  return new Promise((resolve) => {
-    exec(command, (error) => {
-      if (error) {
-        console.error(error);
-        resolve(
-          NextResponse.json(
-            { error: "Download failed" },
-            { status: 500 }
-          )
+    ytProcess.on('close', (code) => {
+      if (code !== 0) {
+        return resolve(
+          NextResponse.json({ error: 'Download failed' }, { status: 500 })
         );
-        return;
       }
 
-      const fileBuffer = fs.readFileSync(outputPath);
-
-      // cleanup after response
-      setTimeout(() => {
-        fs.unlink(outputPath, () => {});
-      }, 10000);
+      const fileBuffer = Buffer.concat(chunks);
 
       resolve(
         new NextResponse(fileBuffer, {
           headers: {
-            "Content-Type":
-              type === "audio"
-                ? "audio/mpeg"
-                : "video/mp4",
+            "Content-Type": type === "audio" ? "audio/mpeg" : "video/mp4",
             "Content-Disposition": `attachment; filename="${filename}"`,
             "Access-Control-Expose-Headers": "Content-Disposition",
           },
         })
       );
+    });
+
+    ytProcess.on('error', (err) => {
+      console.error(err);
+      resolve(NextResponse.json({ error: 'Failed to spawn yt-dlp', details: err.message }, { status: 500 }));
     });
   });
 }
