@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     "instagram reel download",
     "instagram video saver",
   ],
-  authors: [{ name: "Instagram Reels Downloader" }],
-  creator: "Instagram Reels Downloader",
+  authors: [{ name: "sanoj chaudhary" }],
+  creator: "sanoj chaudhary",
   metadataBase: new URL("https://instgramvideodownload.onrender.com"),
 
   openGraph: {
