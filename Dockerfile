@@ -1,6 +1,6 @@
 FROM node:20-bookworm
 
-# Install Python 3.11, ffmpeg, curl
+# Install Python 3.11, pip, ffmpeg, curl
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
@@ -8,8 +8,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp via pip (NOT apt)
-RUN pip3 install -U yt-dlp
+# ✅ FIX: allow pip to install system packages
+RUN pip3 install -U yt-dlp --break-system-packages
+
+# (Optional but recommended) verify install
+RUN python3 --version && yt-dlp --version
 
 WORKDIR /app
 
