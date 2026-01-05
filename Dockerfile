@@ -1,17 +1,32 @@
 FROM node:20-bullseye
 
-# Install yt-dlp
-RUN apt-get update && apt-get install -y yt-dlp
+# Install ffmpeg + curl
+RUN apt-get update \
+    && apt-get install -y ffmpeg curl \
+    && rm -rf /var/lib/apt/lists/*
 
+# Install yt-dlp binary
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+    -o /usr/local/bin/yt-dlp \
+    && chmod +x /usr/local/bin/yt-dlp
+
+# Set working directory
 WORKDIR /app
 
+# Copy dependency files
 COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm ci
 
+# Copy source
 COPY . .
 
+# Build Next.js
 RUN npm run build
 
+# Expose port
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Start Next.js
+CMD ["npm", "run", "start"]
