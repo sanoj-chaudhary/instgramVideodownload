@@ -1,11 +1,11 @@
 FROM node:20-bullseye
 
-# Install ffmpeg + curl
+# Install required system packages
 RUN apt-get update \
     && apt-get install -y ffmpeg curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp binary
+# Install yt-dlp (official binary)
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
     -o /usr/local/bin/yt-dlp \
     && chmod +x /usr/local/bin/yt-dlp
@@ -16,10 +16,10 @@ WORKDIR /app
 # Copy dependency files
 COPY package.json package-lock.json ./
 
-# Install dependencies
+# Install node dependencies
 RUN npm ci
 
-# Copy source
+# Copy project files
 COPY . .
 
 # Build Next.js
