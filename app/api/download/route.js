@@ -18,45 +18,23 @@ export async function GET(req) {
     );
   }
 
-  const filename = `download.${type === "audio" ? "mp3" : "mp4"}`;
+  const isAudio = type === "audio";
+  const filename = `download.${isAudio ? "mp3" : "mp4"}`;
 
-  // Correct yt-dlp arguments
-  const args =
-    type === "audio"
-      ? [
-          "-x",
-          "--audio-format",
-          "mp3",
-          "-o",
-          "-",
-          url,
-        ]
-      : [
-          "-f",
-          "mp4",
-          "-o",
-          "-",
-          url,
-        ];
+  const args = isAudio
+    ? ["-x", "--audio-format", "mp3", "-o", "-", url]
+    : ["-f", "mp4", "-o", "-", url];
 
-  const ytProcess = spawn("yt-dlp", args, {
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const yt = spawn("yt-dlp", args, { stdio: ["ignore", "pipe", "pipe"] });
 
-  ytProcess.stderr.on("data", (data) => {
-    console.error("yt-dlp:", data.toString());
-  });
+  yt.stderr.on("data", (d) => console.error("yt-dlp:", d.toString()));
 
-  ytProcess.on("error", (err) => {
-    console.error("Spawn error:", err);
-  });
-
-  return new NextResponse(Readable.toWeb(ytProcess.stdout), {
+  return new NextResponse(Readable.toWeb(yt.stdout), {
     headers: {
-      "Content-Type":
-        type === "audio" ? "audio/mpeg" : "video/mp4",
+      "Content-Type": isAudio ? "audio/mpeg" : "video/mp4",
       "Content-Disposition": `attachment; filename="${filename}"`,
-      "Access-Control-Expose-Headers": "Content-Disposition",
+      "Content-Transfer-Encoding": "binary",
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "no-store",
     },
   });
